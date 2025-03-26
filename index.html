@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CMD Style Website</title>
+    <style>
+        body {
+            background-color: black;
+            color: lime;
+            font-family: monospace;
+            padding: 0;
+            margin: 0;
+            overflow: hidden;
+        }
+        #cmd {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            white-space: pre-wrap;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        #input {
+            border: none;
+            background: none;
+            color: lime;
+            font-family: monospace;
+            outline: none;
+            width: 100%;
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+        }
+        .blink {
+            animation: blink 1s steps(1) infinite;
+        }
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
+        #matrixEffect {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+    </style>
+</head>
+<body>
+    <div id="cmd">C:\\Users\\Guest></div>
+    <input type="text" id="input" autofocus>
+
+    <div id="matrixEffect"></div>
+
+    <script>
+        const input = document.getElementById("input");
+        const cmd = document.getElementById("cmd");
+        const matrixEffect = document.getElementById("matrixEffect");
+
+        let matrixInterval;
+
+        input.addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                let command = input.value;
+                input.value = "";
+
+                let output = "Command not recognized.";
+                if (command.toLowerCase() === "help") {
+                    output = "Available commands:\nhelp - Show available commands\ndir - List files\necho [text] - Print text\ncls - Clear the screen\nver - Display Windows version\ntime - Display current time\ndate - Display current date\nabout - Show system info\ncolor [color] - Change text color\nascii - Display ASCII art\nmatrix - Start Matrix effect\nstopmatrix - Stop Matrix effect\ncd [dir] - Change directory\nping [website] - Ping a website\nshutdown - Shut down the system";
+                } else if (command.toLowerCase() === "dir") {
+                    output = "Directory of C:\\Users\\Guest\n\n[.]   [..]   file1.txt   file2.exe";
+                } else if (command.toLowerCase().startsWith("echo ")) {
+                    output = command.slice(5);
+                } else if (command.toLowerCase() === "cls") {
+                    cmd.innerHTML = "C:\\Users\\Guest>";
+                    matrixEffect.innerHTML = "";  // Clear the matrix effect when screen is cleared
+                    return;
+                } else if (command.toLowerCase() === "ver") {
+                    output = "Microsoft Windows [Version 10.0.19045.1]";
+                } else if (command.toLowerCase() === "time") {
+                    let date = new Date();
+                    output = date.toLocaleTimeString();
+                } else if (command.toLowerCase() === "date") {
+                    let date = new Date();
+                    output = date.toLocaleDateString();
+                } else if (command.toLowerCase() === "about") {
+                    output = "System Information\n\nOS: Windows 10\nVersion: 10.0.19045.1\nRAM: 8 GB\nProcessor: Intel i7";
+                } else if (command.toLowerCase().startsWith("color ")) {
+                    let color = command.slice(6);
+                    if (["red", "green", "blue", "yellow", "magenta", "cyan", "white"].includes(color)) {
+                        document.body.style.color = color;
+                        output = `Text color changed to ${color}`;
+                    } else {
+                        output = "Invalid color.";
+                    }
+                } else if (command.toLowerCase() === "ascii") {
+                    output = "ASCII Art:\n\n  _______  \n /       \\ \n|         |\n|   ***   |\n|   ***   |\n \\_______/ ";
+                } else if (command.toLowerCase() === "matrix") {
+                    output = "Matrix effect starting...";
+                    cmd.innerHTML += `\nC:\\Users\\Guest> ${command}\n${output}`;
+                    startMatrixEffect();  // Start the Matrix effect
+                    return;
+                } else if (command.toLowerCase() === "stopmatrix") {
+                    output = "Stopping Matrix effect...";
+                    cmd.innerHTML += `\nC:\\Users\\Guest> ${command}\n${output}`;
+                    stopMatrixEffect();  // Stop the Matrix effect
+                    return;
+                } else if (command.toLowerCase().startsWith("cd ")) {
+                    output = `Changed directory to ${command.slice(3)}`;
+                } else if (command.toLowerCase().startsWith("ping ")) {
+                    let website = command.slice(5);
+                    output = `Pinging ${website}...`;
+                    setTimeout(() => {
+                        cmd.innerHTML += `\nReply from ${website}: bytes=32 time<1ms TTL=128`;
+                    }, 1000);
+                    return;
+                } else if (command.toLowerCase() === "shutdown") {
+                    output = "Shutting down...";
+                    setTimeout(() => {
+                        cmd.innerHTML += `\n${output}`;
+                        cmd.innerHTML += `\nC:\\Users\\Guest> System shut down.`;
+                    }, 2000);
+                    return;
+                }
+
+                cmd.innerHTML += `\nC:\\Users\\Guest> ${command}\n${output}`;
+                cmd.scrollTop = cmd.scrollHeight;  // Ensure the page scrolls down as commands fill the screen
+            }
+        });
+
+        function startMatrixEffect() {
+            const cols = Math.floor(window.innerWidth / 20);  // Columns based on screen width
+            const drops = new Array(cols).fill(0);
+
+            matrixInterval = setInterval(() => {
+                matrixEffect.innerHTML = "";  // Clear previous effect
+                for (let i = 0; i < cols; i++) {
+                    let char = String.fromCharCode(Math.random() * (126 - 33) + 33);  // Random character
+                    let drop = document.createElement('div');
+                    drop.textContent = char;
+                    drop.style.position = "absolute";
+                    drop.style.top = `${drops[i] * 20}px`;
+                    drop.style.left = `${i * 20}px`;
+                    drop.style.color = "lime";
+                    matrixEffect.appendChild(drop);
+
+                    drops[i] = (drops[i] * 1) + 1;
+
+                    if (drops[i] * 20 > window.innerHeight) {
+                        drops[i] = 0;  // Reset drop if it reaches the bottom
+                    }
+                }
+            }, 50);  // Adjust the speed of the effect
+        }
+
+        function stopMatrixEffect() {
+            clearInterval(matrixInterval);  // Stop the Matrix effect
+            matrixEffect.innerHTML = "";  // Clear the screen
+        }
+
+        window.onresize = () => {
+            clearInterval(matrixInterval);  // Clear effect on resize
+            startMatrixEffect();  // Restart Matrix effect with new screen size
+        };
+    </script>
+</body>
+</html>
